@@ -102,8 +102,7 @@ class _MyState extends State<MyWidget> {
       if (!isHcpp) {
         return <String, Object?>{
           keyMessage: 'Skipped',
-          keyReason:
-              'HCPP is not supported on this device/configuration (requires Vulkan and Android 14+)',
+          keyReason: 'HCPP is not supported on this device/configuration (requires Vulkan and Android 14+)',
         };
       }
     }
@@ -204,6 +203,12 @@ class _MyState extends State<MyWidget> {
 
       kTextTest => const TextDrawingCanvas(),
       kImageTest => ImageDrawingCanvas(image: _loadedImage),
+      kImeVisibilityAfterResumeTest => const Material(
+        child: TextField(
+          autofocus: true,
+          decoration: InputDecoration(labelText: 'IME visibility test'),
+        ),
+      ),
       _ => VectorDrawingsCanvas(message: _message),
     };
 

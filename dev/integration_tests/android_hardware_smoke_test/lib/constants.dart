@@ -7,8 +7,7 @@
 // =============================================================================
 
 /// The MethodChannel name used for query and control of native platform capabilities.
-const nativeSupportChannelName =
-    'com.example.android_hardware_smoke_test/native_support';
+const nativeSupportChannelName = 'com.example.android_hardware_smoke_test/native_support';
 
 /// The MethodChannel method name used to query the active graphics rendering backend.
 const methodImpellerBackend = 'impeller_backend';
@@ -115,6 +114,9 @@ const kAdvancedBlendTest = 'advancedBlendTest';
 /// Scenario name for rendering a centered BackdropFilter Gaussian blur layer.
 const kBackdropFilterBlurTest = 'backdropFilterBlurTest';
 
+/// Scenario that renders an autofocus text field for Android IME lifecycle testing.
+const kImeVisibilityAfterResumeTest = 'imeVisibilityAfterResumeTest';
+
 /// The prefix shared by all platform view scenario names.
 const platformViewPrefix = 'platformView';
 
@@ -122,8 +124,7 @@ const platformViewPrefix = 'platformView';
 const kPlatformViewTextureLayerTest = '${platformViewPrefix}TextureLayerTest';
 
 /// Scenario name for embedding a native platform view using Hybrid Composition.
-const kPlatformViewHybridCompositionTest =
-    '${platformViewPrefix}HybridCompositionTest';
+const kPlatformViewHybridCompositionTest = '${platformViewPrefix}HybridCompositionTest';
 
 /// Scenario name for embedding a native platform view using Hybrid Composition++.
 const kPlatformViewHybridCompositionPlusPlusTest =

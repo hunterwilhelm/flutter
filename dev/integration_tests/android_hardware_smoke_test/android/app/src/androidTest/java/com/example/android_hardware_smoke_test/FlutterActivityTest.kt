@@ -7,15 +7,23 @@
 package com.example.android_hardware_smoke_test
 
 import android.graphics.Bitmap
+import android.os.Build
+import android.os.SystemClock
 import android.util.Base64
 import android.util.Log
+import android.view.WindowInsets
+import android.view.WindowManager
+import android.view.inputmethod.InputMethodManager
+import io.flutter.embedding.android.FlutterActivity
 import androidx.lifecycle.Lifecycle
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.json.JSONObject
 import org.junit.AfterClass
+import org.junit.Assume.assumeTrue
 import org.junit.Assert.assertEquals
+import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,6 +31,7 @@ import java.io.ByteArrayOutputStream
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 private class BlankScreenshotException(
     message: String
@@ -253,6 +262,84 @@ class FlutterActivityTest {
         }
     }
 
+    private fun renderImeTextField() {
+        val deadline = SystemClock.elapsedRealtime() + TEST_TIMEOUT_SEC * 1000
+        while (SystemClock.elapsedRealtime() < deadline) {
+            val future = CompletableFuture<String>()
+            rule.scenario.onActivity { activity ->
+                val message =
+                    JSONObject().apply {
+                        put(Constants.KEY_TEST_NAME, Constants.IME_VISIBILITY_AFTER_RESUME_TEST)
+                        put(Constants.KEY_CAPTURE_SCREENSHOT, false)
+                    }
+                activity.messageChannel?.send(message) { reply ->
+                    try {
+                        val replyJson =
+                            reply as? JSONObject
+                                ?: throw IllegalStateException(
+                                    "Expected JSONObject reply from Dart, but received: $reply"
+                                )
+                        future.complete(replyJson.getString(Constants.KEY_MESSAGE))
+                    } catch (e: Exception) {
+                        future.completeExceptionally(e)
+                    }
+                } ?: future.completeExceptionally(
+                    IllegalStateException("Flutter message channel is unavailable")
+                )
+            }
+
+            try {
+                assertEquals(
+                    "Rendered ${Constants.IME_VISIBILITY_AFTER_RESUME_TEST}",
+                    future.get(1, TimeUnit.SECONDS),
+                )
+                // Autofocus configures Flutter's input connection asynchronously after the
+                // first frame. Give that connection time to exist before requesting the IME.
+                SystemClock.sleep(500)
+                rule.scenario.onActivity { activity ->
+                    activity.window.setSoftInputMode(
+                        WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE or
+                            WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE
+                    )
+                    val flutterView =
+                        activity.findViewById<android.view.View>(FlutterActivity.FLUTTER_VIEW_ID)
+                    flutterView.requestFocus()
+                    val inputMethodManager =
+                        activity.getSystemService(InputMethodManager::class.java)
+                    inputMethodManager.showSoftInput(flutterView, InputMethodManager.SHOW_FORCED)
+                    flutterView.windowInsetsController?.show(WindowInsets.Type.ime())
+                }
+                return
+            } catch (_: TimeoutException) {
+                // Flutter can take a moment to register its channel handler on a cold engine.
+                SystemClock.sleep(50)
+            } catch (_: Exception) {
+                // A message sent before the handler is registered may receive a null reply.
+                SystemClock.sleep(50)
+            }
+        }
+        fail("Timed out waiting for Flutter to render the IME test text field")
+    }
+
+    private fun awaitActivityCondition(description: String, condition: (MainActivity) -> Boolean) {
+        val deadline = SystemClock.elapsedRealtime() + TEST_TIMEOUT_SEC * 1000
+        while (SystemClock.elapsedRealtime() < deadline) {
+            var satisfied = false
+            rule.scenario.onActivity { activity -> satisfied = condition(activity) }
+            if (satisfied) {
+                return
+            }
+            SystemClock.sleep(50)
+        }
+        fail("Timed out waiting for $description")
+    }
+
+    private fun awaitImeVisibility(visible: Boolean) {
+        awaitActivityCondition("IME to become ${if (visible) "visible" else "hidden"}") { activity ->
+            activity.window.decorView.rootWindowInsets?.isVisible(WindowInsets.Type.ime()) == visible
+        }
+    }
+
     private fun captureAndSendScreenshot(
         x: Int,
         y: Int,
@@ -412,5 +499,24 @@ class FlutterActivityTest {
     @Test
     fun platformViewHybridCompositionPlusPlusTest() {
         templateTest(Constants.PLATFORM_VIEW_HYBRID_COMPOSITION_PLUS_PLUS_TEST)
+    }
+
+    @Test
+    fun imeRemainsVisibleAfterActivityResume() {
+        assumeTrue(
+            "IME visibility is only exposed by the Android API on API 30+",
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R,
+        )
+
+        renderImeTextField()
+        awaitImeVisibility(true)
+
+        // Moving to CREATED runs onPause/onStop; returning to RESUMED exercises the real
+        // window-focus and soft-input policy path after FlutterView is made visible again.
+        rule.scenario.moveToState(Lifecycle.State.CREATED)
+        rule.scenario.moveToState(Lifecycle.State.RESUMED)
+
+        awaitActivityCondition("the activity to regain window focus") { it.hasWindowFocus() }
+        awaitImeVisibility(true)
     }
 }
