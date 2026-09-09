@@ -1616,10 +1616,6 @@ public class FlutterView extends FrameLayout
   public void setVisibility(int visibility) {
     final boolean shouldRestoreTextInputFocus =
         visibility == View.VISIBLE && restoreTextInputFocusOnVisibilityChange;
-    if (visibility != View.VISIBLE && hasFocus() && hasActiveFrameworkTextInputClient()) {
-      // Preserve Android's IME state: only restore focus if the IME was visible before hiding.
-      restoreTextInputFocusOnVisibilityChange = isImeVisible();
-    }
 
     super.setVisibility(visibility);
     // For `FlutterSurfaceView`, setting visibility to the current `FlutterView` will not take
@@ -1635,6 +1631,16 @@ public class FlutterView extends FrameLayout
         requestFocus();
       }
     }
+  }
+
+  @Override
+  public void onWindowFocusChanged(boolean hasWindowFocus) {
+    // Android dismisses the IME as part of losing window focus, before the Activity's onStop()
+    // hides this view. Save the state here, while the old IME visibility is still available.
+    if (!hasWindowFocus && hasFocus() && hasActiveFrameworkTextInputClient()) {
+      restoreTextInputFocusOnVisibilityChange = isImeVisible();
+    }
+    super.onWindowFocusChanged(hasWindowFocus);
   }
 
   private boolean hasActiveFrameworkTextInputClient() {

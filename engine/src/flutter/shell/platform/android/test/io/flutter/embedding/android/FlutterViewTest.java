@@ -167,6 +167,7 @@ public class FlutterViewTest {
     doReturn(true).when(flutterView).requestFocus();
     clearInvocations(flutterView);
 
+    flutterView.onWindowFocusChanged(false);
     flutterView.setVisibility(View.GONE);
     flutterView.setVisibility(View.VISIBLE);
 
@@ -192,6 +193,7 @@ public class FlutterViewTest {
     when(flutterView.hasFocus()).thenReturn(true, false);
     clearInvocations(flutterView);
 
+    flutterView.onWindowFocusChanged(false);
     flutterView.setVisibility(View.GONE);
     flutterView.setVisibility(View.VISIBLE);
 
@@ -216,6 +218,7 @@ public class FlutterViewTest {
     when(flutterView.hasFocus()).thenReturn(true, false);
     clearInvocations(flutterView);
 
+    flutterView.onWindowFocusChanged(false);
     flutterView.setVisibility(View.GONE);
     flutterView.setVisibility(View.VISIBLE);
 
