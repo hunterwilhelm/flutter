@@ -1627,7 +1627,11 @@ public class FlutterView extends FrameLayout
     if (shouldRestoreTextInputFocus) {
       restoreTextInputFocusOnVisibilityChange = false;
       // The text input client may have changed while FlutterView was hidden.
-      if (hasActiveFrameworkTextInputClient() && !hasFocus()) {
+      if (hasActiveFrameworkTextInputClient()) {
+        // A real app switch can leave this view focused even though Android has discarded its
+        // input connection. Re-requesting an existing focus is a no-op, so restart focus to let
+        // Android apply the soft-input visibility policy for this text editor.
+        clearFocus();
         requestFocus();
       }
     }

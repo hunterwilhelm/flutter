@@ -163,7 +163,7 @@ public class FlutterViewTest {
     textInputPluginField.setAccessible(true);
     textInputPluginField.set(flutterView, textInputPlugin);
     when(textInputPlugin.isTextInputClientActive()).thenReturn(true);
-    when(flutterView.hasFocus()).thenReturn(true, false);
+    when(flutterView.hasFocus()).thenReturn(true);
     doReturn(true).when(flutterView).requestFocus();
     clearInvocations(flutterView);
 
@@ -171,6 +171,7 @@ public class FlutterViewTest {
     flutterView.setVisibility(View.GONE);
     flutterView.setVisibility(View.VISIBLE);
 
+    verify(flutterView).clearFocus();
     verify(flutterView).requestFocus();
   }
 
@@ -190,13 +191,14 @@ public class FlutterViewTest {
     textInputPluginField.setAccessible(true);
     textInputPluginField.set(flutterView, textInputPlugin);
     when(textInputPlugin.isTextInputClientActive()).thenReturn(true);
-    when(flutterView.hasFocus()).thenReturn(true, false);
+    when(flutterView.hasFocus()).thenReturn(true);
     clearInvocations(flutterView);
 
     flutterView.onWindowFocusChanged(false);
     flutterView.setVisibility(View.GONE);
     flutterView.setVisibility(View.VISIBLE);
 
+    verify(flutterView, never()).clearFocus();
     verify(flutterView, never()).requestFocus();
   }
 
@@ -215,13 +217,14 @@ public class FlutterViewTest {
     textInputPluginField.setAccessible(true);
     textInputPluginField.set(flutterView, textInputPlugin);
     when(textInputPlugin.isTextInputClientActive()).thenReturn(false);
-    when(flutterView.hasFocus()).thenReturn(true, false);
+    when(flutterView.hasFocus()).thenReturn(true);
     clearInvocations(flutterView);
 
     flutterView.onWindowFocusChanged(false);
     flutterView.setVisibility(View.GONE);
     flutterView.setVisibility(View.VISIBLE);
 
+    verify(flutterView, never()).clearFocus();
     verify(flutterView, never()).requestFocus();
   }
 

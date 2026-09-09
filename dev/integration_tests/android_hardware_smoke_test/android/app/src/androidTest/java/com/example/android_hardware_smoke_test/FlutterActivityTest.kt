@@ -7,6 +7,7 @@
 package com.example.android_hardware_smoke_test
 
 import android.graphics.Bitmap
+import android.content.Intent
 import android.os.Build
 import android.os.SystemClock
 import android.util.Base64
@@ -511,10 +512,18 @@ class FlutterActivityTest {
         renderImeTextField()
         awaitImeVisibility(true)
 
-        // Moving to CREATED runs onPause/onStop; returning to RESUMED exercises the real
-        // window-focus and soft-input policy path after FlutterView is made visible again.
-        rule.scenario.moveToState(Lifecycle.State.CREATED)
-        rule.scenario.moveToState(Lifecycle.State.RESUMED)
+        // Launching another opaque activity runs the real app-switch path, including stopping
+        // and later resuming this activity without artificially changing FlutterView's focus.
+        rule.scenario.onActivity { activity ->
+            activity.startActivity(Intent(activity, BackgroundActivity::class.java))
+        }
+        awaitActivityCondition("the activity to lose window focus") { !it.hasWindowFocus() }
+        awaitActivityCondition("the background activity to start") {
+            BackgroundActivity.instance != null
+        }
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            BackgroundActivity.instance?.finish()
+        }
 
         awaitActivityCondition("the activity to regain window focus") { it.hasWindowFocus() }
         awaitImeVisibility(true)
