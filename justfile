@@ -48,3 +48,7 @@ test-local:
 # Launch the manual debug app with FVM and the rebuilt local engine.
 run-debug-app:
     cd {{debug_app}} && fvm flutter run -d {{device}} --local-engine=android_debug_unopt_arm64 --local-engine-src-path={{root}}/engine/src --local-engine-host=host_debug_unopt_arm64
+
+build-and-test-local:
+    just build-android-jar
+    just test-local
