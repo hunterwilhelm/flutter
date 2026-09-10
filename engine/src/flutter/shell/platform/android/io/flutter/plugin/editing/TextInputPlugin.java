@@ -405,9 +405,7 @@ public class TextInputPlugin implements ListenableEditingState.EditingStateWatch
     return lastInputConnection;
   }
 
-  /**
-   * Returns whether the current text input target is a framework text input client.
-   */
+  /** Returns whether the current text input target is a framework text input client. */
   public boolean isTextInputClientActive() {
     return inputTarget.type == InputTarget.Type.FRAMEWORK_CLIENT
         && configuration != null

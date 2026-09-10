@@ -45,6 +45,7 @@ just build-android-jar
 just build-host-engine
 just test-local
 just run-debug-app
+cd engine/src/flutter && PATH=/Users/hunterwilhelm/depot_tools:$PATH ./ci/format.sh
 ```
 
 `test-local` creates an ephemeral Maven-layout repository under `/private/tmp`
