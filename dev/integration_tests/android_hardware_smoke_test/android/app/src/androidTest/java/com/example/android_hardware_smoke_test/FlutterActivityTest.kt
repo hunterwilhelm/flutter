@@ -6,8 +6,8 @@
 
 package com.example.android_hardware_smoke_test
 
-import android.graphics.Bitmap
 import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Build
 import android.os.SystemClock
 import android.util.Base64
@@ -15,8 +15,8 @@ import android.util.Log
 import android.view.WindowInsets
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
-import io.flutter.embedding.android.FlutterActivity
 import androidx.lifecycle.Lifecycle
+import io.flutter.embedding.android.FlutterActivity
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
