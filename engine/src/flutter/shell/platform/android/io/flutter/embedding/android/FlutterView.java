@@ -133,7 +133,6 @@ public class FlutterView extends FrameLayout
   // Connections to a Flutter execution context.
   @Nullable private FlutterEngine flutterEngine;
   private boolean restoreTextInputFocusOnVisibilityChange;
-  private boolean isImeVisible;
 
   @NonNull
   private final Set<FlutterEngineAttachmentListener> flutterEngineAttachmentListeners =
@@ -762,7 +761,6 @@ public class FlutterView extends FrameLayout
       viewportMetrics.viewInsetRight = imeInsets.right;
       viewportMetrics.viewInsetBottom = imeInsets.bottom; // Typically, only bottom is non-zero
       viewportMetrics.viewInsetLeft = imeInsets.left;
-      isImeVisible = insets.isVisible(android.view.WindowInsets.Type.ime());
 
       Insets systemGestureInsets =
           insets.getInsets(android.view.WindowInsets.Type.systemGestures());
@@ -823,7 +821,6 @@ public class FlutterView extends FrameLayout
       viewportMetrics.viewInsetRight = 0;
       viewportMetrics.viewInsetBottom = guessBottomKeyboardInset(insets);
       viewportMetrics.viewInsetLeft = 0;
-      isImeVisible = viewportMetrics.viewInsetBottom > 0;
     }
 
     // Data from the DisplayCutout bounds. Cutouts for cameras and other sensors are
@@ -1639,10 +1636,12 @@ public class FlutterView extends FrameLayout
 
   @Override
   public void onWindowFocusChanged(boolean hasWindowFocus) {
-    // Android dismisses the IME as part of losing window focus, before the Activity's onStop()
-    // hides this view. Save the state here, while the old IME visibility is still available.
     if (!hasWindowFocus && hasFocus() && hasActiveFrameworkTextInputClient()) {
-      restoreTextInputFocusOnVisibilityChange = isImeVisible();
+      final WindowInsets insets = getRootWindowInsets();
+      restoreTextInputFocusOnVisibilityChange =
+          Build.VERSION.SDK_INT >= API_LEVELS.API_30 && insets != null
+              ? insets.isVisible(WindowInsets.Type.ime())
+              : viewportMetrics.viewInsetBottom > 0;
     }
     super.onWindowFocusChanged(hasWindowFocus);
   }
@@ -1651,10 +1650,6 @@ public class FlutterView extends FrameLayout
     return isAttachedToFlutterEngine()
         && textInputPlugin != null
         && textInputPlugin.isTextInputClientActive();
-  }
-
-  private boolean isImeVisible() {
-    return isImeVisible;
   }
 
   /**
